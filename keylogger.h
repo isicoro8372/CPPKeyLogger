@@ -2,7 +2,7 @@
 
    キー、コントローラー入力モジュール
 														 Author	: 桜井優輝
-														 Ver	: 0.1.3-20241114
+														 Ver	: 0.1.4-20241115
 --------------------------------------------------------------------------------
 
 	main.cpp内のグローバル変数として以下を定義してください
@@ -20,7 +20,7 @@
 #ifndef KEYLOGGER_H_
 #define KEYLOGGER_H_
 
-//#define _K_DEBUG //デバッグ用
+#define _K_DEBUG //デバッグ用
 
 #pragma comment (lib, "Xinput.lib")
 
@@ -45,11 +45,13 @@ static enum XINPUTBUTTON
 	XINPUTBUTTON_LEFTSTICKBUTTON = 0x0040,
 	XINPUTBUTTON_RIGHTSTICKBUTTON = 0x0080,
 
-	XINPUTBUTTON_LEFTTRIGGER = 0x0100,		//トリガー2つの組み合わせ
-	XINPUTBUTTON_RIGHTTRIGGER = 0x0200,		
+	XINPUTBUTTON_LEFTBUTTON = 0x0100,
+	XINPUTBUTTON_RIGHTBUTTON = 0x0200,	
+	XINPUTBUTTON_LEFTTRIGGER = 0x0400,
+	XINPUTBUTTON_RIGHTTRIGGER = 0x0800,	
+
 	XINPUTBUTTON_A = 0x1000,
 	XINPUTBUTTON_B = 0x2000,
-
 	XINPUTBUTTON_X = 0x4000,
 	XINPUTBUTTON_Y = 0x8000,
 };
@@ -126,13 +128,13 @@ public:
 		//system("cls");
 
 		//コントローラー入力
+		for (int frame = LOG_FRAME - 1; frame > 0; frame--)
+		{
+			memcpy_s(instance->controllerLog[frame], sizeof(XINPUT_STATE) * CONTROLLER_MAX, instance->controllerLog[frame - 1], sizeof(XINPUT_STATE) * CONTROLLER_MAX);
+		}
+
 		for (DWORD i = 0; i < CONTROLLER_MAX; i++)
 		{
-			for (int frame = LOG_FRAME - 1; frame > 0; frame--)
-			{
-				memcpy_s(instance->controllerLog[frame], MAX_INPUT, instance->controllerLog[frame - 1], sizeof(XINPUT_STATE) * CONTROLLER_MAX);
-			}
-
 			DWORD result = XInputGetState(i, &instance->controllerLog[0][i]);
 #ifdef _K_DEBUG
 			if (result == ERROR_DEVICE_NOT_CONNECTED)
@@ -145,8 +147,9 @@ public:
 				std::cout << "Device " << i + 1 << " Pressed ";
 				for (int b = 0; b < 16; b++)
 				{
-					if (GetButtonDown((XINPUTBUTTON)buttonID, i))
+					if (GetButtonUp((XINPUTBUTTON)buttonID, i))
 					{
+						system("cls");
 						std::cout << b << " ";
 					}
 
@@ -225,19 +228,24 @@ public:
 		return instance->controllerLog[0][index];
 	}
 
-	static bool GetButtonTrigger(XINPUTBUTTON buttonType, int controllerID = 0)
+	static bool GetButtonTrigger(XINPUTBUTTON buttonType, unsigned int frame = 1, int controllerID = 0)
 	{
-		//前フレームに押されているか
-		if (instance->controllerLog[1][controllerID].Gamepad.wButtons & buttonType)
+		//遡れるフレームより値が大きいなら最大値に
+		if (frame > LOG_FRAME - 1)
 		{
-			return false;
-		}
-		//押されていなかった場合に現在フレームに押されているか
-		else if (instance->controllerLog[0][controllerID].Gamepad.wButtons & buttonType)
-		{
-			return true;
+			frame = LOG_FRAME - 1;
 		}
 
+		//任意フレーム前に押されているか
+		for (int i = 0; i < frame + 1; i++)
+		{
+			if (instance->controllerLog[i][controllerID].Gamepad.wButtons & buttonType)
+			{
+				return true;
+			}
+		}
+
+		//押されていたらtrueを返す
 		return false;
 	}
 
@@ -262,27 +270,21 @@ public:
 		}
 	}
 
-	static bool GetButtonDown(XINPUTBUTTON buttonType, unsigned int frame = 1, int controllerID = 0)
+	static bool GetButtonDown(XINPUTBUTTON buttonType, int controllerID = 0)
 	{
-		//遡れるフレームより値が大きいなら最大値に
-		if (frame > LOG_FRAME - 1)
+		//前フレームに押されているか
+		if (instance->controllerLog[1][controllerID].Gamepad.wButtons & buttonType)
 		{
-			frame = LOG_FRAME - 1;
+			return false;
+		}
+		//押されていなかった場合に現在フレームに押されているか
+		else if (instance->controllerLog[0][controllerID].Gamepad.wButtons & buttonType)
+		{
+			return true;
 		}
 
-		//任意フレーム前に押されているか
-		for (int i = 0; i < frame + 1; i++)
-		{
-			if (instance->controllerLog[i][controllerID].Gamepad.wButtons & buttonType)
-			{
-				return true;
-			}
-		}
-
-		//押されていたらtrueを返す
 		return false;
 	}
-
 };
 
 #endif
