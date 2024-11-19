@@ -2,18 +2,17 @@
 
    キー、コントローラー入力モジュール
 														 Author	: 桜井優輝
-														 Ver	: 0.1.4-20241115
+														 Ver	: 0.1.5-20241119
 --------------------------------------------------------------------------------
 
-	main.cpp内のグローバル変数として以下を定義してください
+	main.cpp内のグローバル変数として以下を定義してください。
 	KeyLogger* KeyLogger::instance = nullptr;
 
-	ウィンドウプロシージャコールバック関数(WndProc)内の一番上に追加してください
+	ウィンドウプロシージャコールバック関数(WndProc)内の一番上に追加してください。
 	KeyLogger::StoreKeyLog(uMsg, wParam);
 
 	ゲームフレーム適応後のアップデート処理(WinMain下のUpdate関数内)に追加してください。
 	KeyLogger::UpdateKeyLog();
-
 
 ==============================================================================*/
 
@@ -47,8 +46,6 @@ static enum XINPUTBUTTON
 
 	XINPUTBUTTON_LEFTBUTTON = 0x0100,
 	XINPUTBUTTON_RIGHTBUTTON = 0x0200,	
-	XINPUTBUTTON_LEFTTRIGGER = 0x0400,
-	XINPUTBUTTON_RIGHTTRIGGER = 0x0800,	
 
 	XINPUTBUTTON_A = 0x1000,
 	XINPUTBUTTON_B = 0x2000,
@@ -56,6 +53,11 @@ static enum XINPUTBUTTON
 	XINPUTBUTTON_Y = 0x8000,
 };
 
+static enum XINPUTDIRECTION
+{
+	XINPUTDIRECTION_LEFT = 0x0400,
+	XINPUTDIRECTION_RIGHT = 0x0800,
+};
 /*-----------------------------------変更可能部位-----------------------------*/
 
 //保存するフレーム 
@@ -67,6 +69,16 @@ constexpr int LOG_FRAME = 10;
 //値 0 ～ 4
 //デフォルト 4
 constexpr int CONTROLLER_MAX = 4;
+
+//スティックデッドゾーン
+//値 0 ～ 65535
+//デフォルト 128
+constexpr SHORT CONTROLLER_DEADZONE_STICK = 128;
+
+//トリガーデッドゾーン
+//値 0 ～ 255
+//デフォルト 16
+constexpr BYTE CONTROLLER_DEADZONE_TRIGGER = 16;
 
 /*----------------------------------------------------------------------------*/
 
@@ -90,7 +102,7 @@ public:
 	{
 		if (!instance)
 		{
-			instance = new KeyLogger;
+			instance = DBG_NEW KeyLogger;
 #ifdef _K_DEBUG
 			AllocConsole(); // コンソールを作成
 			freopen("CONOUT$", "w", stdout); // stdoutをコンソールにリダイレクト
@@ -155,6 +167,15 @@ public:
 
 					buttonID <<= 1;
 				}
+				XMFLOAT2 stickAxis;
+				stickAxis = ConvertRawStickAxis(GetStickAxis(XINPUTDIRECTION_LEFT, i));
+				std::cout << "StickLeft X:" << stickAxis.x << " Y:"<< stickAxis.y << " (" << GetStickAxis(XINPUTDIRECTION_LEFT, i) << ") ";
+				stickAxis = ConvertRawStickAxis(GetStickAxis(XINPUTDIRECTION_RIGHT, i));
+				std::cout << "StickRight X:" << stickAxis.x << " Y:" << stickAxis.y << " (" << GetStickAxis(XINPUTDIRECTION_RIGHT, i) << " ";
+
+				std::cout << "TriggerLeft " << GetTriggerPressure(XINPUTDIRECTION_LEFT, i) << " ";
+				std::cout << "TriggerRight " << GetTriggerPressure(XINPUTDIRECTION_RIGHT, i) << " ";
+
 				std::cout << "wParam(" << instance->controllerLog[0][i].Gamepad.wButtons << ")" << std::endl;
 			}
 #endif // _K_DEBUG
@@ -285,6 +306,53 @@ public:
 
 		return false;
 	}
+
+	static LONG GetStickAxis(XINPUTDIRECTION stick, int controllerID = 0, SHORT deadzone = CONTROLLER_DEADZONE_STICK, int frame = 0)
+	{
+		switch (stick)
+		{
+		//対応したスティックの傾きを返す(上位16X 下位16Y)
+		case XINPUTDIRECTION_LEFT:
+			return instance->controllerLog[frame][controllerID].Gamepad.sThumbLX << sizeof(SHORT) + instance->controllerLog[frame][controllerID].Gamepad.sThumbLY;
+			break;
+		case XINPUTDIRECTION_RIGHT:
+			return instance->controllerLog[frame][controllerID].Gamepad.sThumbRX << sizeof(SHORT) + instance->controllerLog[frame][controllerID].Gamepad.sThumbRY;
+			break;
+		default:
+			return NULL;
+			break;
+		}
+	}
+
+	static BYTE GetTriggerPressure(XINPUTDIRECTION trigger, int controllerID = 0, SHORT deadzone = CONTROLLER_DEADZONE_TRIGGER, int frame = 0)
+	{
+		switch (trigger)
+		{
+			//対応したトリガーの押下圧を返す
+		case XINPUTDIRECTION_LEFT:
+			return instance->controllerLog[frame][controllerID].Gamepad.bLeftTrigger;
+			break;
+		case XINPUTDIRECTION_RIGHT:
+			return instance->controllerLog[frame][controllerID].Gamepad.bRightTrigger;
+			break;
+		default:
+			return NULL;
+			break;
+		}
+	}
+
+#ifdef DIRECTX_MATH_VERSION
+	static XMFLOAT2 ConvertRawStickAxis(LONG rawValue)
+	{
+		XMFLOAT2 returnValue;
+		returnValue.x = rawValue >> sizeof(SHORT);
+		rawValue <<= sizeof(SHORT);
+		returnValue.y = rawValue >> sizeof(SHORT);
+
+		return returnValue;
+	}
+#endif // DIRECTX_MATH_VERSION
+
 };
 
 #endif
