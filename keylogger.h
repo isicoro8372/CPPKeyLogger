@@ -2,7 +2,7 @@
 
    キー、コントローラー入力モジュール
 														 Author	: 桜井優輝
-														 Ver	: 0.1.6-20241122
+														 Ver	: 1.0.0-20241122
 --------------------------------------------------------------------------------
 
 	main.cpp内のグローバル変数として以下を定義してください。
@@ -105,7 +105,7 @@ public:
 	{
 		if (!instance)
 		{
-			instance = DBG_NEW KeyLogger;
+			instance = new KeyLogger;
 #ifdef _K_DEBUG
 			AllocConsole(); // コンソールを作成
 			freopen("CONOUT$", "w", stdout); // stdoutをコンソールにリダイレクト
@@ -179,6 +179,9 @@ public:
 				std::cout << "TriggerRight " << (int)GetTriggerPressure(XINPUTDIRECTION_RIGHT, i) << " ";
 
 				std::cout << "wParam(" << instance->controllerLog[0][i].Gamepad.wButtons << ")" << std::endl;
+				std::cout << "  L Vector X:" << GetStickVector(XINPUTDIRECTION_LEFT, i).x << " Y: " << GetStickVector(XINPUTDIRECTION_LEFT, i).y << " Len: " << MagnitudeVector2(GetStickVector(XINPUTDIRECTION_LEFT)) << std::endl;
+				std::cout << "  L VectorDirection X:" << GetStickVectorDirection(XINPUTDIRECTION_LEFT, i).x << " Y: " << GetStickVectorDirection(XINPUTDIRECTION_LEFT, i).y << std::endl;
+				std::cout << "  L VectorRatio X:" << GetStickVectorRatio(XINPUTDIRECTION_LEFT, i).x << " Y: " << GetStickVectorRatio(XINPUTDIRECTION_LEFT, i).y << std::endl;
 			}
 #endif // _K_DEBUG
 		}
@@ -415,14 +418,11 @@ public:
 			break;
 		}
 
-		//正規化
-		float vectorMagnitude = NormalizeVector2(returnVector);
-
-		return { returnVector.x / vectorMagnitude, returnVector.y / vectorMagnitude };
+		return NormalizeVector2(returnVector, MagnitudeVector2(returnVector));
 	}
 
-	//スティックの単位ベクトル取得(割合)
-	static XMFLOAT2 GetStickVectorDirectionRatio(XINPUTDIRECTION direction, int controllerID = 0, int retroactiveFrames = 1, int startingFrame = 0)
+	//スティックの割合ベクトル取得
+	static XMFLOAT2 GetStickVectorRatio(XINPUTDIRECTION direction, int controllerID = 0, int retroactiveFrames = 1, int startingFrame = 0)
 	{
 		//フレーム数が1未満の場合に0,0を返す
 		if (retroactiveFrames < 1)
@@ -447,10 +447,17 @@ public:
 		return { returnVector.x / 65535, returnVector.y / 65535 };
 	}
 
-	//2次元ベクトル正規化関数
-	static float NormalizeVector2(const XMFLOAT2& vector2)
+	//2次元ベクトル長さ取得関数
+	static inline float MagnitudeVector2(const XMFLOAT2& vector2)
 	{
+		if (vector2.x == 0 && vector2.y == 0) { return -1.0f; }
 		return (float)sqrt(vector2.x * vector2.x + vector2.y * vector2.y);
+	}
+
+	//2次元ベクトル正規化関数
+	static inline XMFLOAT2 NormalizeVector2(const XMFLOAT2& vector2, float magnitude)
+	{
+		return { vector2.x / magnitude, vector2.y / magnitude };
 	}
 
 
