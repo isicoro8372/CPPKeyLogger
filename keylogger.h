@@ -2,7 +2,7 @@
 
    キー、コントローラー入力モジュール
 														 Author	: 桜井優輝
-														 Ver	: 0.1.5-20241119
+														 Ver	: 0.1.6-20241122
 --------------------------------------------------------------------------------
 
 	main.cpp内のグローバル変数として以下を定義してください。
@@ -14,6 +14,9 @@
 	ゲームフレーム適応後のアップデート処理(WinMain下のUpdate関数内)に追加してください。
 	KeyLogger::UpdateKeyLog();
 
+	//X軸取得修正
+	//スティック入力の単位ベクトル
+	//トリガーの押下検出
 ==============================================================================*/
 
 #ifndef KEYLOGGER_H_
@@ -71,9 +74,9 @@ constexpr int LOG_FRAME = 10;
 constexpr int CONTROLLER_MAX = 4;
 
 //スティックデッドゾーン
-//値 0 ～ 65535
-//デフォルト 128
-constexpr SHORT CONTROLLER_DEADZONE_STICK = 128;
+//値 0 ～ 32767
+//デフォルト 2048
+constexpr SHORT CONTROLLER_DEADZONE_STICK = 8192;
 
 //トリガーデッドゾーン
 //値 0 ～ 255
@@ -159,9 +162,8 @@ public:
 				std::cout << "Device " << i + 1 << " Pressed ";
 				for (int b = 0; b < 16; b++)
 				{
-					if (GetButtonUp((XINPUTBUTTON)buttonID, i))
+					if (GetButtonTrigger((XINPUTBUTTON)buttonID, i))
 					{
-						system("cls");
 						std::cout << b << " ";
 					}
 
@@ -169,12 +171,12 @@ public:
 				}
 				XMFLOAT2 stickAxis;
 				stickAxis = ConvertRawStickAxis(GetStickAxis(XINPUTDIRECTION_LEFT, i));
-				std::cout << "StickLeft X:" << stickAxis.x << " Y:"<< stickAxis.y << " (" << GetStickAxis(XINPUTDIRECTION_LEFT, i) << ") ";
+				std::cout << "StickLeft X:" << stickAxis.x << " Y:" << stickAxis.y << " (" << GetStickAxis(XINPUTDIRECTION_LEFT, i) << ") ";
 				stickAxis = ConvertRawStickAxis(GetStickAxis(XINPUTDIRECTION_RIGHT, i));
-				std::cout << "StickRight X:" << stickAxis.x << " Y:" << stickAxis.y << " (" << GetStickAxis(XINPUTDIRECTION_RIGHT, i) << " ";
+				std::cout << "StickRight X:" << stickAxis.x << " Y:" << stickAxis.y << " (" << GetStickAxis(XINPUTDIRECTION_RIGHT, i) << ") ";
 
-				std::cout << "TriggerLeft " << GetTriggerPressure(XINPUTDIRECTION_LEFT, i) << " ";
-				std::cout << "TriggerRight " << GetTriggerPressure(XINPUTDIRECTION_RIGHT, i) << " ";
+				std::cout << "TriggerLeft " << (int)GetTriggerPressure(XINPUTDIRECTION_LEFT, i) << " ";
+				std::cout << "TriggerRight " << (int)GetTriggerPressure(XINPUTDIRECTION_RIGHT, i) << " ";
 
 				std::cout << "wParam(" << instance->controllerLog[0][i].Gamepad.wButtons << ")" << std::endl;
 			}
@@ -185,7 +187,7 @@ public:
 	/*---------------------------------------------------------------------------------------------*/
 
 	static bool GetKeyTrigger(WPARAM keyType, unsigned int frame = 1)
-	{		
+	{
 		//遡れるフレームより値が大きいなら最大値に
 		if (frame > LOG_FRAME - 1)
 		{
@@ -309,48 +311,149 @@ public:
 
 	static LONG GetStickAxis(XINPUTDIRECTION stick, int controllerID = 0, SHORT deadzone = CONTROLLER_DEADZONE_STICK, int frame = 0)
 	{
+		unsigned short x, y = 0;
+
 		switch (stick)
 		{
-		//対応したスティックの傾きを返す(上位16X 下位16Y)
+			//対応したスティックの傾きを返す(上位16X 下位16Y)
 		case XINPUTDIRECTION_LEFT:
-			return instance->controllerLog[frame][controllerID].Gamepad.sThumbLX << sizeof(SHORT) + instance->controllerLog[frame][controllerID].Gamepad.sThumbLY;
+			x = instance->controllerLog[frame][controllerID].Gamepad.sThumbLX;
+			y = instance->controllerLog[frame][controllerID].Gamepad.sThumbLY;
 			break;
 		case XINPUTDIRECTION_RIGHT:
-			return instance->controllerLog[frame][controllerID].Gamepad.sThumbRX << sizeof(SHORT) + instance->controllerLog[frame][controllerID].Gamepad.sThumbRY;
-			break;
-		default:
-			return NULL;
+			x = instance->controllerLog[frame][controllerID].Gamepad.sThumbRX;
+			y = instance->controllerLog[frame][controllerID].Gamepad.sThumbRY;
 			break;
 		}
+
+		if (x < deadzone || x > 65535 - deadzone) { x = 0; }
+		if (y < deadzone || y > 65535 - deadzone) { y = 0; }
+
+		return x << 16 | (y);
 	}
 
 	static BYTE GetTriggerPressure(XINPUTDIRECTION trigger, int controllerID = 0, SHORT deadzone = CONTROLLER_DEADZONE_TRIGGER, int frame = 0)
 	{
+		BYTE returnValue = 0;
+
+		//対応したトリガーの押下圧を取得
 		switch (trigger)
 		{
-			//対応したトリガーの押下圧を返す
 		case XINPUTDIRECTION_LEFT:
-			return instance->controllerLog[frame][controllerID].Gamepad.bLeftTrigger;
+			returnValue = instance->controllerLog[frame][controllerID].Gamepad.bLeftTrigger;
 			break;
 		case XINPUTDIRECTION_RIGHT:
-			return instance->controllerLog[frame][controllerID].Gamepad.bRightTrigger;
-			break;
-		default:
-			return NULL;
+			returnValue = instance->controllerLog[frame][controllerID].Gamepad.bRightTrigger;
 			break;
 		}
+
+		if (returnValue < deadzone)
+		{
+			return 0;
+		}
+
+		return returnValue;
 	}
 
 #ifdef DIRECTX_MATH_VERSION
 	static XMFLOAT2 ConvertRawStickAxis(LONG rawValue)
 	{
 		XMFLOAT2 returnValue;
-		returnValue.x = rawValue >> sizeof(SHORT);
-		rawValue <<= sizeof(SHORT);
-		returnValue.y = rawValue >> sizeof(SHORT);
+		returnValue.x = rawValue >> 16;
+		rawValue <<= 16;
+		returnValue.y = rawValue >> 16;
 
 		return returnValue;
 	}
+
+	//スティックのベクトル取得
+	static XMFLOAT2 GetStickVector(XINPUTDIRECTION direction, int controllerID = 0, int retroactiveFrames = 1, int startingFrame = 0)
+	{
+		//フレーム数が1未満の場合に0,0を返す
+		if (retroactiveFrames < 1)
+		{
+			return { 0.0f,0.0f };
+		}
+
+		switch (direction)
+		{
+		case XINPUTDIRECTION_LEFT:
+		return { (float)(instance->controllerLog[startingFrame][controllerID].Gamepad.sThumbLX - instance->controllerLog[startingFrame + retroactiveFrames][controllerID].Gamepad.sThumbLX),
+					 (float)(instance->controllerLog[startingFrame][controllerID].Gamepad.sThumbLY - instance->controllerLog[startingFrame + retroactiveFrames][controllerID].Gamepad.sThumbLY) };
+			break;
+
+		case XINPUTDIRECTION_RIGHT:
+		return { (float)(instance->controllerLog[startingFrame][controllerID].Gamepad.sThumbRX - instance->controllerLog[startingFrame + retroactiveFrames][controllerID].Gamepad.sThumbRX),
+					 (float)(instance->controllerLog[startingFrame][controllerID].Gamepad.sThumbRY - instance->controllerLog[startingFrame + retroactiveFrames][controllerID].Gamepad.sThumbRY) };
+			break;
+
+		default:
+			return { 0.0f,0.0f };
+		}
+	}
+
+	//スティックの単位ベクトル取得(正規化後)
+	static XMFLOAT2 GetStickVectorDirection(XINPUTDIRECTION direction, int controllerID = 0, int retroactiveFrames = 1, int startingFrame = 0)
+	{
+		//フレーム数が1未満の場合に0,0を返す
+		if (retroactiveFrames < 1)
+		{
+			return { 0.0f,0.0f };
+		}
+
+		XMFLOAT2 returnVector = { 0.0f, 0.0f };
+
+		switch (direction)
+		{
+		case XINPUTDIRECTION_LEFT:
+			returnVector = { (float)(instance->controllerLog[startingFrame][controllerID].Gamepad.sThumbLX - instance->controllerLog[startingFrame + retroactiveFrames][controllerID].Gamepad.sThumbLX),
+						 (float)(instance->controllerLog[startingFrame][controllerID].Gamepad.sThumbLY - instance->controllerLog[startingFrame + retroactiveFrames][controllerID].Gamepad.sThumbLY) };
+			break;
+		case XINPUTDIRECTION_RIGHT:
+			returnVector = { (float)(instance->controllerLog[startingFrame][controllerID].Gamepad.sThumbRX - instance->controllerLog[startingFrame + retroactiveFrames][controllerID].Gamepad.sThumbRX),
+						 (float)(instance->controllerLog[startingFrame][controllerID].Gamepad.sThumbRY - instance->controllerLog[startingFrame + retroactiveFrames][controllerID].Gamepad.sThumbRY) };
+			break;
+		}
+
+		//正規化
+		float vectorMagnitude = NormalizeVector2(returnVector);
+
+		return { returnVector.x / vectorMagnitude, returnVector.y / vectorMagnitude };
+	}
+
+	//スティックの単位ベクトル取得(割合)
+	static XMFLOAT2 GetStickVectorDirectionRatio(XINPUTDIRECTION direction, int controllerID = 0, int retroactiveFrames = 1, int startingFrame = 0)
+	{
+		//フレーム数が1未満の場合に0,0を返す
+		if (retroactiveFrames < 1)
+		{
+			return { 0.0f,0.0f };
+		}
+
+		XMFLOAT2 returnVector = { 0.0f, 0.0f };
+
+		switch (direction)
+		{
+		case XINPUTDIRECTION_LEFT:
+			returnVector = { (float)(instance->controllerLog[startingFrame][controllerID].Gamepad.sThumbLX - instance->controllerLog[startingFrame + retroactiveFrames][controllerID].Gamepad.sThumbLX),
+						 (float)(instance->controllerLog[startingFrame][controllerID].Gamepad.sThumbLY - instance->controllerLog[startingFrame + retroactiveFrames][controllerID].Gamepad.sThumbLY) };
+			break;
+		case XINPUTDIRECTION_RIGHT:
+			returnVector = { (float)(instance->controllerLog[startingFrame][controllerID].Gamepad.sThumbRX - instance->controllerLog[startingFrame + retroactiveFrames][controllerID].Gamepad.sThumbRX),
+						 (float)(instance->controllerLog[startingFrame][controllerID].Gamepad.sThumbRY - instance->controllerLog[startingFrame + retroactiveFrames][controllerID].Gamepad.sThumbRY) };
+			break;
+		}
+
+		return { returnVector.x / 65535, returnVector.y / 65535 };
+	}
+
+	//2次元ベクトル正規化関数
+	static float NormalizeVector2(const XMFLOAT2& vector2)
+	{
+		return (float)sqrt(vector2.x * vector2.x + vector2.y * vector2.y);
+	}
+
+
 #endif // DIRECTX_MATH_VERSION
 
 };
