@@ -1,5 +1,3 @@
-
-
 # CPPKeyLogger
 
 **C++用のキーボード、コントローラー入力を取得するヘッダーライブラリ**
@@ -31,8 +29,7 @@
 
 ## キーボード入力
 
-***bool*** <ins>**GetKeyTrigger**</ins>
-**( *WPARAM*** keyType, ***unsigned int*** frame = 1 **)**
+***bool*** <ins>**GetKeyTrigger**</ins> **( *WPARAM*** keyType, ***unsigned int*** frame = 1 **)**
 >|**引数**|WPARAM| unsigned int||**戻り値**
 >|-|-|-|-|-|
 >|**説明**|`取得したいキータイプ`|`遅延フレーム`||`結果`
@@ -40,8 +37,7 @@
 >
 >遅延フレーム分キーを押し続けられた後、放されるまでtrueを返します
 
-***bool*** <ins>**GetKeyDown**</ins>
-**( *WPARAM*** keyType **)**
+***bool*** <ins>**GetKeyDown**</ins> **( *WPARAM*** keyType **)**
 >|**引数**|WPARAM||**戻り値**
 >|-|-|-|-|
 >|**説明**|`取得したいキータイプ`||`結果`
@@ -50,8 +46,7 @@
 >現在フレームでキーボードを押された場合にtrueを返します
 
 
-***bool*** <ins>**GetKeyUp**</ins>
-**( *WPARAM*** keyType **)**
+***bool*** <ins>**GetKeyUp**</ins> **( *WPARAM*** keyType **)**
 >|**引数**|WPARAM||**戻り値**
 >|-|-|-|-|
 >|**説明**|`取得したいキータイプ`||`結果`
@@ -62,7 +57,7 @@
 
 
 ## コントローラー入力
-***bool*** <ins>**GetButtonTrigger**</ins>
+***bool*** <ins>**GetButtonTrigger**</ins>  
 **( *XINPUTBUTTON*** buttonType, ***unsigned int*** frame = 1, ***int*** controllerID = 0 **)**
 >|**引数**|XINPUTBUTTON| unsigned int|int||**戻り値**
 >|-|-|-|-|-|-|
@@ -71,8 +66,7 @@
 >
 >遅延フレーム分押し続けられた後、放されるまでtrueを返します
 
-***bool*** <ins>**GetButtonDown**</ins>
-**( *XINPUTBUTTON*** buttonType, ***int*** controllerID = 0 **)**
+***bool*** <ins>**GetButtonDown**</ins> **( *XINPUTBUTTON*** buttonType, ***int*** controllerID = 0 **)**
 >|**引数**|XINPUTBUTTON|int||**戻り値**
 >|-|-|-|-|-|
 >|**説明**|`取得したいボタンタイプ`|`コントローラーのID`|||`結果`
@@ -81,8 +75,7 @@
 >現在フレームで押された場合にtrueを返します
 
 
-***bool*** <ins>**GetButtonUp**</ins>
-**( *XINPUTBUTTON*** buttonType, ***int*** controllerID = 0 **)**
+***bool*** <ins>**GetButtonUp**</ins> **( *XINPUTBUTTON*** buttonType, ***int*** controllerID = 0 **)**
 >|**引数**|XINPUTBUTTON|int||**戻り値**
 >|-|-|-|-|-|
 >|**説明**|`取得したいボタンタイプ`|`コントローラーのID`|||`結果`
@@ -90,7 +83,7 @@
 >
 >現在フレームで離された場合にtrueを返します
 
-**static *LONG*** <ins>**GetStickAxis**</ins> 
+**static *LONG*** <ins>**GetStickAxis**</ins>  
 **( *XINPUTDIRECTION*** stick, ***int*** controllerID = 0, ***SHORT*** deadzone = CONTROLLER_DEADZONE_STICK, ***int*** frame = 0 **)**
 >|**引数**|XINPUTDIRECTION| int|SHORT |int ||**戻り値**
 >|-|-|-|-|-|-|-|
@@ -99,7 +92,7 @@
 >
 >上位16ビットがX座標、下位16ビットがY座標として返ってきます
 
-**static *BYTE*** <ins>**GetTriggerPressure**</ins> 
+**static *BYTE*** <ins>**GetTriggerPressure**</ins>  
 **( *XINPUTDIRECTION*** trigger, ***int*** controllerID = 0, ***SHORT*** deadzone = CONTROLLER_DEADZONE_TRIGGER, ***int*** frame = 0 **)**
 >|**引数**|XINPUTDIRECTION| int|SHORT |int ||**戻り値**
 >|-|-|-|-|-|-|-|
@@ -108,6 +101,14 @@
 >|||||||
 >
 >トリガーの押下圧を返します
+
+**static *XINPUT_STATE*** <ins>**GetControllerState**</ins> **( *int*** index **)**
+>|**引数**|int||**戻り値**
+>|-|-|-|-|
+>|**説明**|`コントローラーのID`|||`結果`
+>|**取れる値**|0 ~ CONTROLELR_MAX||XINPUT_STATEのポインタ
+>
+>現在フレームで押された場合にtrueを返します
 
 ## DirectX連携関数
 **static *XMFLOAT2*** <ins>**ConvertRawStickAxis**</ins> **( *LONG*** rawValue **)**
@@ -119,22 +120,32 @@
 >
 ><ins><B>GetStickAxis()</B></ins>で取得したスティックの傾きをXMFLOAT2型にして返します
 
-**static *XMFLOAT2*** <ins>**GetStickVector**</ins> **( *XINPUTDIRECTION*** direction, ***int*** controllerID = 0, ***int*** retroactiveFrames = 1, ***int*** startingFrame = 0 **)**
+**static *XMFLOAT2*** <ins>**GetStickVector**</ins>  
+**( *XINPUTDIRECTION*** direction, ***int*** controllerID = 0, ***int*** retroactiveFrames = 1, ***int*** startingFrame = 0 **)**
 >|**引数**|XINPUTDIRECTION| int | int | int ||**戻り値**
 >|-|-|-|-|-|-|-|
 >|**説明**|`取得したいスティック`|`コントローラーのID`|`起点フレーム`|`終点フレーム`||`単位ベクトル`
 >|**取れる値**|-| 0 ~ CONTROLELR_MAX|0 ~ LOG_FRAME|0 ~ LOG_FRAME||{ -1 ~ 1, -1 ~ 1 }|
 >|||||||
 >
->対象スティックの起点フレームから終点フレームまでの間に動かされたベクトルを返します
+>対象スティックの起点フレームから終点フレームまでの間に動かされたスティックのベクトルをXMFLOAT2型で返します
 
-**static *XMFLOAT2*** <ins>**GetStickVectorDirection**</ins> **( *XINPUTDIRECTION*** direction, ***int*** controllerID = 0, ***int*** retroactiveFrames = 1, ***int*** startingFrame = 0 **)**
+**static *XMFLOAT2*** <ins>**GetStickVectorDirection**</ins>  
+**( *XINPUTDIRECTION*** direction, ***int*** controllerID = 0, ***int*** retroactiveFrames = 1, ***int*** startingFrame = 0 **)**
 >|**引数**|XINPUTDIRECTION| int | int | int ||**戻り値**
 >|-|-|-|-|-|-|-|
 >|**説明**|`取得したいスティック`|`コントローラーのID`|`起点フレーム`|`終点フレーム`||`単位ベクトル`
 >|**取れる値**|-| 0 ~ CONTROLELR_MAX|0 ~ LOG_FRAME|0 ~ LOG_FRAME||{ -32768 ~ 32767, -32768 ~ 32767 }|
 >|||||||
 >
->対象スティックの起点フレームから終点フレームまでの間に動かされたベクトルを正規化して返します
+>対象スティックの起点フレームから終点フレームまでの間に動かされたスティックのベクトルを正規化してXMFLOAT2型で返します
 
-
+**static *XMFLOAT2*** <ins>**GetStickVectorRatio**</ins>  
+**( *XINPUTDIRECTION*** direction, ***int*** controllerID = 0, ***int*** retroactiveFrames = 1, ***int*** startingFrame = 0 **)**
+>|**引数**|XINPUTDIRECTION| int | int | int ||**戻り値**
+>|-|-|-|-|-|-|-|
+>|**説明**|`取得したいスティック`|`コントローラーのID`|`起点フレーム`|`終点フレーム`||`割合ベクトル`
+>|**取れる値**|-| 0 ~ CONTROLELR_MAX|0 ~ LOG_FRAME|0 ~ LOG_FRAME||{ -1 ~ 1, -1 ~ 1 }|
+>|||||||
+>
+>対象スティックの起点フレームから終点フレームまでの間に動かされたスティックのベクトルの割合をXMFLOAT2型で返します
