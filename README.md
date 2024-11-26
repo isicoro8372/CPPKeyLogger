@@ -83,7 +83,7 @@
 >
 >現在フレームで離された場合にtrueを返します
 
-**static *LONG*** <ins>**GetStickAxis**</ins>  
+***LONG*** <ins>**GetStickAxis**</ins>  
 **( *XINPUTDIRECTION*** stick, ***int*** controllerID = 0, ***SHORT*** deadzone = CONTROLLER_DEADZONE_STICK, ***int*** frame = 0 **)**
 >|**引数**|XINPUTDIRECTION| int|SHORT |int ||**戻り値**
 >|-|-|-|-|-|-|-|
@@ -92,7 +92,7 @@
 >
 >上位16ビットがX座標、下位16ビットがY座標として返ってきます
 
-**static *BYTE*** <ins>**GetTriggerPressure**</ins>  
+***BYTE*** <ins>**GetTriggerPressure**</ins>  
 **( *XINPUTDIRECTION*** trigger, ***int*** controllerID = 0, ***SHORT*** deadzone = CONTROLLER_DEADZONE_TRIGGER, ***int*** frame = 0 **)**
 >|**引数**|XINPUTDIRECTION| int|SHORT |int ||**戻り値**
 >|-|-|-|-|-|-|-|
@@ -102,7 +102,7 @@
 >
 >トリガーの押下圧を返します
 
-**static *XINPUT_STATE*** <ins>**GetControllerState**</ins> **( *int*** index **)**
+***XINPUT_STATE*** <ins>**GetControllerState**</ins> **( *int*** index **)**
 >|**引数**|int||**戻り値**
 >|-|-|-|-|
 >|**説明**|`コントローラーのID`|||`XINPUT_STATEのポインタ`
@@ -111,7 +111,7 @@
 >現在フレームで押された場合にtrueを返します
 
 ## DirectX連携関数
-**static *XMFLOAT2*** <ins>**ConvertRawStickAxis**</ins> **( *LONG*** rawValue **)**
+***XMFLOAT2*** <ins>**ConvertRawStickAxis**</ins> **( *LONG*** rawValue **)**
 >|**引数**|LONG||**戻り値**
 >|-|-|-|-|
 >|**説明**|`スティックの傾きの生の値`||`XMFLOAT2に変換されたスティック座標`
@@ -120,7 +120,7 @@
 >
 ><ins><B>GetStickAxis()</B></ins>で取得したスティックの傾きをXMFLOAT2型にして返します
 
-**static *XMFLOAT2*** <ins>**GetStickVector**</ins>  
+***XMFLOAT2*** <ins>**GetStickVector**</ins>  
 **( *XINPUTDIRECTION*** direction, ***int*** controllerID = 0, ***int*** retroactiveFrames = 1, ***int*** startingFrame = 0 **)**
 >|**引数**|XINPUTDIRECTION| int | int | int ||**戻り値**
 >|-|-|-|-|-|-|-|
@@ -130,7 +130,7 @@
 >
 >対象スティックの起点フレームから終点フレームまでの間に動かされたスティックのベクトルをXMFLOAT2型で返します
 
-**static *XMFLOAT2*** <ins>**GetStickVectorDirection**</ins>  
+***XMFLOAT2*** <ins>**GetStickVectorDirection**</ins>  
 **( *XINPUTDIRECTION*** direction, ***int*** controllerID = 0, ***int*** retroactiveFrames = 1, ***int*** startingFrame = 0 **)**
 >|**引数**|XINPUTDIRECTION| int | int | int ||**戻り値**
 >|-|-|-|-|-|-|-|
@@ -140,7 +140,7 @@
 >
 >対象スティックの起点フレームから終点フレームまでの間に動かされたスティックのベクトルを正規化してXMFLOAT2型で返します
 
-**static *XMFLOAT2*** <ins>**GetStickVectorRatio**</ins>  
+***XMFLOAT2*** <ins>**GetStickVectorRatio**</ins>  
 **( *XINPUTDIRECTION*** direction, ***int*** controllerID = 0, ***int*** retroactiveFrames = 1, ***int*** startingFrame = 0 **)**
 >|**引数**|XINPUTDIRECTION| int | int | int ||**戻り値**
 >|-|-|-|-|-|-|-|
