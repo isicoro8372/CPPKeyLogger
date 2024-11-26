@@ -105,8 +105,8 @@
 **static *XINPUT_STATE*** <ins>**GetControllerState**</ins> **( *int*** index **)**
 >|**引数**|int||**戻り値**
 >|-|-|-|-|
->|**説明**|`コントローラーのID`|||`結果`
->|**取れる値**|0 ~ CONTROLELR_MAX||XINPUT_STATEのポインタ
+>|**説明**|`コントローラーのID`|||`XINPUT_STATEのポインタ`
+>|**取れる値**|0 ~ CONTROLELR_MAX||XINPUT_STATE
 >
 >現在フレームで押された場合にtrueを返します
 
