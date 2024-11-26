@@ -124,7 +124,7 @@
 **( *XINPUTDIRECTION*** direction, ***int*** controllerID = 0, ***int*** retroactiveFrames = 1, ***int*** startingFrame = 0 **)**
 >|**引数**|XINPUTDIRECTION| int | int | int ||**戻り値**
 >|-|-|-|-|-|-|-|
->|**説明**|`取得したいスティック`|`コントローラーのID`|`起点フレーム`|`終点フレーム`||`単位ベクトル`
+>|**説明**|`取得したいスティック`|`コントローラーのID`|`起点フレーム`|`終点フレーム`||`ベクトル`
 >|**取れる値**|-| 0 ~ CONTROLELR_MAX|0 ~ LOG_FRAME|0 ~ LOG_FRAME||{ -1 ~ 1, -1 ~ 1 }|
 >|||||||
 >
