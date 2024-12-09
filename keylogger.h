@@ -356,6 +356,22 @@ public:
 		return returnValue;
 	}
 
+	static bool GetTriggerDown(XINPUTDIRECTION trigger, int controllerID = 0, SHORT deadzone = CONTROLLER_DEADZONE_TRIGGER, int frame = 0)
+	{
+		BYTE pressure = 0;
+
+		if (trigger == XINPUTDIRECTION_LEFT)
+		{
+			pressure = instance->controllerLog[frame][controllerID].Gamepad.bLeftTrigger;
+		}
+		else
+		{
+			pressure = instance->controllerLog[frame][controllerID].Gamepad.bRightTrigger;
+		}
+
+		return pressure > deadzone;
+	}
+
 #ifdef DIRECTX_MATH_VERSION
 	static XMFLOAT2 ConvertRawStickAxis(LONG rawValue)
 	{
