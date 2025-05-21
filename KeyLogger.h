@@ -2,16 +2,19 @@
 
    キー、コントローラー入力モジュール
 														 Author	: 桜井優輝
-														 Ver	: 1.0.1-20241126
+														 Ver	: 1.0.2-20250521
 --------------------------------------------------------------------------------
 
 	main.cpp内のグローバル変数として以下を定義してください。
 	KeyLogger* KeyLogger::instance = nullptr;
 
+	WinMain関数内の初期化部分に以下を記述してください。
+	KeyLogger::Initialize(hInstance, g_Window);
+
 	ウィンドウプロシージャコールバック関数(WndProc)内の一番上に追加してください。
 	KeyLogger::StoreKeyLog(uMsg, wParam);
 
-	ゲームフレーム適応後のアップデート処理(WinMain下のUpdate関数内)に追加してください。
+	フレーム処理として以下を追加してください。(例: WinMain下Timer処理分岐後)
 	KeyLogger::UpdateKeyLog();
 ==============================================================================*/
 
